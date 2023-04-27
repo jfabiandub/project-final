@@ -41,8 +41,6 @@ public:
 
 class Viewer : public Window {
 public:
-
-
   Ball ball; 
 
   Paddle paddle;
@@ -55,22 +53,16 @@ public:
 
   bool last_brick_hit = false;
 
-   int texture_index = 0;
+  int texture_index = 0;
 
-    int level = 1;
-
-   
+  int level = 1;
 
 
-  Viewer() : Window() {
-  }
+Viewer() : Window() {
+}
 
-  void setup() {
-    setWindowSize(1000, 1000);
-
-
-
-renderer.blendMode(agl::BLEND);
+void setup() {
+  setWindowSize(1000, 1000);
 
 renderer.loadShader("simple-T", "../shaders/simple-T.vs", "../shaders/simple-T.fs");
 renderer.loadTexture("white", "../textures/white.png", 0);
@@ -81,31 +73,18 @@ renderer.loadTexture("green", "../textures/green.png", 0);
 renderer.loadTexture("blue2", "../textures/blue2.png", 0);
 renderer.loadTexture("gray", "../textures/gray.png", 0);
 
-
-
-
-
- // paddle.color = vec4(1.0f, 1.0f, 1.0f, 1.0f);
-
-
-
-
-
-    ball.position = vec2(0, -0.8);
-    ball.velocity = normalize(vec2(0.5, 1.0)) * 0.7f;
-    ball.radius = 0.05f;
-    //ball.color = vec4(1.0f, 0.0f, 0.0f, 1.0f);
+ball.position = vec2(0, -0.8);
+ball.velocity = normalize(vec2(0.5, 1.0)) * 0.7f;
+ball.radius = 0.05f;
     
-    paddle.position = vec2(0, -0.9);
-    paddle.size = vec2(0.3, 0.05);
-    paddle.speed = 0.5f;
-     paddle.color = vec4(0.0f, 1.0f, 1.0f, 1.0f);
-    //paddle.color = vec4(0.0f, 0.0f, 1.0f, 1.0f);
+paddle.position = vec2(0, -0.9);
+paddle.size = vec2(0.3, 0.05);
+paddle.speed = 0.5f;
+paddle.color = vec4(0.0f, 1.0f, 1.0f, 1.0f);
 
-    
-  createBricks();
+createBricks();
+}
 
-  }
 
 void createBricks() {
   bricks.clear();
@@ -134,57 +113,48 @@ void createBricks() {
   }
 }
  
-
-
-  void update(float dt) {
+void update(float dt) {
       // check for collisions with the paddle and bricks
-      bool hit_paddle = checkBallPaddleCollision();
-      bool hit_brick = checkBallBrickCollision();
+  bool hit_paddle = checkBallPaddleCollision();
+  bool hit_brick = checkBallBrickCollision();
+  
+  if (hit_paddle || hit_brick) {
+    // update the ball's position
+    updateBallPosition(dt);
 
-
-
-      if (hit_paddle || hit_brick) {
-        // update the ball's position
-        updateBallPosition(dt);
-
-        if (bricks.back().is_alive == false && level == 1) {
+    if (bricks.back().is_alive == false && level == 1) {
       last_brick_hit = true;
     }
-
-      
-      }
-
-
-      // check if the ball went beyond the paddle
-      if (ball.position.y - ball.radius < paddle.position.y - paddle.size.y) {
-        ball_lost = true;
-      }
-
-      
   }
 
+  // check if the ball went beyond the paddle
+  if (ball.position.y - ball.radius < paddle.position.y - paddle.size.y) {
+    ball_lost = true;
+  }
+}
 
-  void restartGame() {
-  ball.position = vec2(0, -0.8);
-  ball.velocity = normalize(vec2(0.5, 1.0)) * 0.7f;
-  ball_lost = false;
-  game_over = false;
 
-  bricks.clear();
-  const int num_bricks = 10;
-  const float brick_width = 0.1f;
-  const float brick_height = 0.05f;
-  const float brick_gap = 0.01f;
-  const float bricks_start_x = -0.45f;
-  const float bricks_start_y = 0.5f;
-  for (int i = 0; i < num_bricks; i++) {
-    bricks.push_back({
-      vec2(
-        bricks_start_x + (brick_width + brick_gap) * (i % 10),
-        bricks_start_y - (brick_height + brick_gap) * (i / 10)
-      ),
-      vec2(brick_width, brick_height),
-      true
+void restartGame() {
+ball.position = vec2(0, -0.8);
+ball.velocity = normalize(vec2(0.5, 1.0)) * 0.7f;
+ball_lost = false;
+game_over = false;
+
+bricks.clear();
+const int num_bricks = 10;
+const float brick_width = 0.1f;
+const float brick_height = 0.05f;
+const float brick_gap = 0.01f;
+const float bricks_start_x = -0.45f;
+const float bricks_start_y = 0.5f;
+for (int i = 0; i < num_bricks; i++) {
+  bricks.push_back({
+    vec2(
+      bricks_start_x + (brick_width + brick_gap) * (i % 10),
+      bricks_start_y - (brick_height + brick_gap) * (i / 10)
+    ),
+    vec2(brick_width, brick_height),
+    true
     });
   }
 }
@@ -198,16 +168,16 @@ bool checkBallPaddleCollision() {
 
     index++;
     index = index % 6;
-return true;
+    return true;
     }
-    return false;
-  }
+  return false;
+}
   
 
-  bool checkBallBrickCollision() {
-    for (int i = 0; i < bricks.size(); i++) {
-      if (bricks[i].is_alive &&
-          ball.position.y + ball.radius > bricks[i].position.y - bricks[i].size.y / 2 &&
+bool checkBallBrickCollision() {
+  for (int i = 0; i < bricks.size(); i++) {
+    if (bricks[i].is_alive &&
+      ball.position.y + ball.radius > bricks[i].position.y - bricks[i].size.y / 2 &&
           ball.position.y - ball.radius < bricks[i].position.y + bricks[i].size.y / 2 &&
           ball.position.x > bricks[i].position.x - bricks[i].size.x / 2 &&
           ball.position.x < bricks[i].position.x + bricks[i].size.x / 2) {
