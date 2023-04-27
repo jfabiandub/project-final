@@ -81,6 +81,7 @@ endif()
 include_directories(${INCLUDE_DIRS})
 link_directories(${LIBRARY_DIRS})
 
+
 file(GLOB SOURCES "src/agl/*.h" "src/agl/*.cpp" "src/agl/mesh/*.h" "src/agl/mesh/*.cpp") 
 
 set(SHADERS
@@ -95,3 +96,5 @@ if (WIN32)
   source_group("shaders" FILES ${SHADERS})
   source_group("agl" FILES ${SOURCES})
 endif()
+
+
