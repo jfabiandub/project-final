@@ -18,9 +18,7 @@ namespace agl {
 class GLSLProgramException : public std::runtime_error {
  public:
   explicit GLSLProgramException(const std::string &msg) :
-      std::runtime_error(msg) {
-    std::cout << "Exception: " << msg << std::endl;
-  }
+      std::runtime_error(msg) {}
 };
 
 namespace GLSLShader {

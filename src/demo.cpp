@@ -10,6 +10,7 @@
 #include <random>
 
 
+
 using namespace std;
 using namespace glm;
 using namespace agl;
@@ -57,6 +58,8 @@ public:
 
   int level = 1;
 
+   int num_ball_lost = 0;
+
 
 Viewer() : Window() {
 }
@@ -65,6 +68,7 @@ void setup() {
   setWindowSize(1000, 1000);
 
 renderer.loadShader("simple-T", "../shaders/simple-T.vs", "../shaders/simple-T.fs");
+renderer.loadTexture("title3", "../textures/title3.png", 0);
 renderer.loadTexture("white", "../textures/white.png", 0);
 renderer.loadTexture("blue", "../textures/blue.png", 0);
 renderer.loadTexture("marron", "../textures/marron.png", 0);
@@ -72,6 +76,10 @@ renderer.loadTexture("yellow", "../textures/yellow.png", 0);
 renderer.loadTexture("green", "../textures/green.png", 0);
 renderer.loadTexture("blue2", "../textures/blue2.png", 0);
 renderer.loadTexture("gray", "../textures/gray.png", 0);
+renderer.loadTexture("turquise", "../textures/turquise.png", 0);
+
+
+
 
 ball.position = vec2(0, -0.8);
 ball.velocity = normalize(vec2(0.5, 1.0)) * 0.7f;
@@ -83,22 +91,27 @@ paddle.speed = 0.5f;
 paddle.color = vec4(0.0f, 1.0f, 1.0f, 1.0f);
 
 createBricks();
+
 }
 
 
 void createBricks() {
   bricks.clear();
 
-  int num_bricks = level == 1 ? 10 : 20;
+  int num_bricks = level == 1 ? 10 : level == 2 ? 20 : 30; // set the number of bricks based on the level
   float brick_width = 0.1f;
   float brick_height = 0.05f;
   float brick_gap = 0.01f;
   float bricks_start_x = -0.45f;
-  float bricks_start_y = level == 1 ? 0.5f : 0.8f;
+  float bricks_start_y = level == 1 ? 0.5f : level == 2 ? 0.8f : 0.9f; // set the y-position of the bricks based on the level
 
-  if (level == 2) {
-    ball.velocity *= 1.5f; // increase the ball speed
-    paddle.size /= 2.0f; // decrease the paddle size
+  if (level == 2 || level == 3) {
+    ball.velocity *= 1.5f; // increase the ball speed for levels 2 and 3
+    paddle.size /= 2.0f; // decrease the paddle size for level 2 and 3
+  }
+  if (level == 3) {
+    ball.velocity *= 1.5f; // increase the ball speed for level 3
+    paddle.size *= 2.0f; // increase the paddle size for level 3
   }
 
   for (int i = 0; i < num_bricks; i++) {
@@ -128,36 +141,39 @@ void update(float dt) {
   }
 
   // check if the ball went beyond the paddle
-  if (ball.position.y - ball.radius < paddle.position.y - paddle.size.y) {
-    ball_lost = true;
-  }
+ if (ball.position.y - ball.radius < paddle.position.y - paddle.size.y) {
+        ball_lost = true;
+        num_ball_lost++; // increment ball lost counter
+        if (num_ball_lost >= 3) { // check if game should restart from level 1
+            restart_requested = true;
+            num_ball_lost = 0;
+        } else {
+            restartGame(); // restart current level
+        }
+    }
+    // check if the game is over
+    if (bricks.size() == 0) {
+        game_over = true;
+        level++; // increase the level
+        restartGame(); // restart the game with new level
+    }
+
 }
 
 
-void restartGame() {
-ball.position = vec2(0, -0.8);
-ball.velocity = normalize(vec2(0.5, 1.0)) * 0.7f;
-ball_lost = false;
-game_over = false;
-
-bricks.clear();
-const int num_bricks = 10;
-const float brick_width = 0.1f;
-const float brick_height = 0.05f;
-const float brick_gap = 0.01f;
-const float bricks_start_x = -0.45f;
-const float bricks_start_y = 0.5f;
-for (int i = 0; i < num_bricks; i++) {
-  bricks.push_back({
-    vec2(
-      bricks_start_x + (brick_width + brick_gap) * (i % 10),
-      bricks_start_y - (brick_height + brick_gap) * (i / 10)
-    ),
-    vec2(brick_width, brick_height),
-    true
-    });
+ void restartGame() {
+   ball.position = vec2(0, -0.8);
+  ball.velocity = normalize(vec2(0.5, 1.0)) * 0.7f;
+  ball_lost = false;
+  game_over = false;
+  bricks.clear();
+  if (restart_requested) { // if restarting from level 1
+    level = 1;
+    num_ball_lost = 0;
+    restart_requested = false;
   }
-}
+  createBricks();
+  }
 
 bool checkBallPaddleCollision() {
   if (ball.position.y - ball.radius < paddle.position.y + paddle.size.y &&
@@ -266,20 +282,26 @@ void updatePaddlePosition(float dt) {
 }
 
 
+
+
+
   void draw() {
-
-
-  if (game_over) {
-      game_over = false;
-      ball.position = vec2(0, -0.8);
-      ball.velocity = normalize(vec2(0.5, 1.0)) * 0.7f;
-      paddle.position = vec2(0, -0.9);
-      for (int i = 0; i < bricks.size(); i++) {
-        bricks[i].is_alive = true;
-      }
-  }
+ 
+   //draw border
+  renderer.push();
+  renderer.translate(vec3(0.0f, 0.0f, -0.1f));  // Move the border slightly behind other objects
+  renderer.scale(vec3(1.5f, 2.0f, 0.1f));  // Scale the border to cover the entire screen
+  //renderer.color(0.0f, 0.0f, 0.0f, 1.0f);  // Set the border color (black)
+  renderer.beginShader("simple-T");
+  renderer.texture("image", "turquise");
+  renderer.cube();
+  renderer.pop();
+  renderer.endShader();
+  
 
   updateBallPosition(dt());
+
+
     //draws the ball
   renderer.push();
   renderer.translate(vec3(ball.position, 0));
@@ -315,18 +337,13 @@ void updatePaddlePosition(float dt) {
       renderer.cube();
       renderer.pop();
 
-
     }
   }
   
-  if(last_brick_hit){
-    last_brick_hit = false;
-    level++;
-    createBricks();
-  }
 
   checkBallBrickCollision();
   checkBallPaddleCollision();
+  update(dt());
 }
 
 

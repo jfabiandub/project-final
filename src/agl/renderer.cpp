@@ -30,7 +30,7 @@ using glm::quat;
 using std::string;
 using std::vector;
 
-int Renderer::PrimitiveSubdivision = 32;
+int Renderer::PrimitiveSubdivision = 8;
 
 Renderer::Renderer() {
   _cube = 0;
@@ -126,7 +126,7 @@ void Renderer::init() {
   _trs = mat4(1.0);
   _initialized = true;
 
-  beginShader("unlit");  // unlit is default
+  beginShader("unlit");  
 }
 
 void Renderer::initLines() {
@@ -197,24 +197,6 @@ void Renderer::initText() {
 
     _fontColor = glfonsRGBA(255, 255, 255, 255);
     _fontSize = 20.0;
-}
-
-void Renderer::cullMode(CullMode mode) {
-  if (mode == NONE) {
-    glDisable(GL_CULL_FACE);
-  }
-  else if (mode == FRONT) {
-    glEnable(GL_CULL_FACE);
-    glCullFace(GL_FRONT);
-  }
-  else if (mode == BACK) {
-    glEnable(GL_CULL_FACE);
-    glCullFace(GL_BACK);
-  }
-  else if (mode == FRONT_AND_BACK) {
-    glEnable(GL_CULL_FACE);
-    glCullFace(GL_FRONT_AND_BACK);
-  }
 }
 
 void Renderer::blendMode(BlendMode mode) {
@@ -439,15 +421,11 @@ void Renderer::mesh(const Mesh& mesh) {
   mat4 mv = _viewMatrix * _trs;
   mat4 mvp = _projectionMatrix * mv;
   mat3 nmv = transpose(inverse(mat3(vec3(mv[0]), vec3(mv[1]), vec3(mv[2]))));
-  mat3 nm = transpose(inverse(mat3(vec3(_trs[0]), vec3(_trs[1]), vec3(_trs[2]))));
 
   setUniform("MVP", mvp);
   setUniform("ModelViewMatrix", mv);
   setUniform("NormalMatrix", nmv);
-  setUniform("ViewMatrix", _viewMatrix);
-  setUniform("ProjectionMatrix", _projectionMatrix);
   setUniform("ModelMatrix", _trs);
-  setUniform("ModelInverseTransposeMatrix", nm);
   setUniform("HasUV", mesh.hasUV());
 
   mesh.render();
@@ -647,14 +625,14 @@ void Renderer::loadShader(const std::string& name,
 
   Shader* shader = new Shader();
 
-  std::cout << "Compiling: " << vs << std::endl;
+  //std::cout << "Compiling: " << vs << std::endl;
   shader->compileShader(vs);
 
-  std::cout << "Compiling: " << fs << std::endl;
+  //std::cout << "Compiling: " << fs << std::endl;
   shader->compileShader(fs);
 
   shader->link();
-  std::cout << "Loaded shader: " << name << std::endl;
+  //std::cout << "Loaded shader: " << name << std::endl;
 
   _shaders[name] = shader;
 }
@@ -746,60 +724,6 @@ void Renderer::loadRenderTexture(const std::string& name,
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void Renderer::loadDepthTexture(const std::string& name,
-    int slot, int width, int height) {
-  if (slot == GLFONS_FONT_TEXTURE_SLOT) {
-    std::cout << "WARNING: slot " << slot << " conflicts with font texture\n";
-  }
-
-  GLfloat border[] = { 1.0f, 0.0f, 0.0f, 0.0f };
-
-  // Create the texture object
-  GLuint depthTex;
-  glGenTextures(1, &depthTex);
-  glActiveTexture(GL_TEXTURE0 + slot);  // put in given slot!!
-  glBindTexture(GL_TEXTURE_2D, depthTex);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, width, height, 0, GL_DEPTH_COMPONENT,
-      GL_UNSIGNED_BYTE, NULL);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LESS);
-  glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, border);
-
-  // save texture as an available texture object with the same name
-  _textures[name] = Texture{depthTex, slot};
-
-  // Generate and bind the framebuffer
-  GLuint depthFbo;
-  glGenFramebuffers(1, &depthFbo);
-  glBindFramebuffer(GL_FRAMEBUFFER, depthFbo);
-  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
-      GL_TEXTURE_2D, depthTex, 0);
-
-  // Set the targets for the fragment output variables
-  GLenum drawBuffers[] = {GL_NONE};
-  glDrawBuffers(1, drawBuffers);
-
-  GLenum result = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-  if( result != GL_FRAMEBUFFER_COMPLETE) {
-    std::cout << "Framebuffer error: " << result << std::endl;
-  }
-
-  RenderTexture target; // todo
-  target.handleId = depthFbo;
-  target.textureId = depthTex;
-  target.depthId = -1;
-  target.slot = slot;
-  target.width = width;
-  target.height = height;
-  _renderTextures[name] = target;
-
-  // unbind fbo and revert to default (the screen)
-  glBindFramebuffer(GL_FRAMEBUFFER, 0);
-}
 
 }  // namespace agl
 

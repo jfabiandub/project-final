@@ -16,6 +16,7 @@ if (WIN32) # Include win64 platforms
     lib
     ./external/lib)
 
+
   set(CMAKE_CXX_STANDARD 14)
   set(CMAKE_CXX_FLAGS 
      "/wd4018 /wd4244 /wd4305 /wd4312
@@ -91,6 +92,8 @@ set(SHADERS
 
 add_executable(demo src/demo.cpp ${SOURCES} ${SHADERS})
 target_link_libraries(demo ${CORE})
+
+
 
 if (WIN32)
   source_group("shaders" FILES ${SHADERS})
