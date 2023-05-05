@@ -47,9 +47,12 @@ elseif (APPLE)
     /System/Library/Frameworks
      ./src/agl
      ./src
+     ./external/fmod/inc
     ./external/include
     /usr/local/include)
 
+    set(LIBRARY_DIRS
+    ./external/fmod/lib/mac)
   set(CORE ${GLFW} ${GL_LIB})
 
 elseif (UNIX)

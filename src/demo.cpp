@@ -60,6 +60,8 @@ public:
 
    int num_ball_lost = 0;
 
+   
+
 
 Viewer() : Window() {
 }
@@ -98,20 +100,24 @@ createBricks();
 void createBricks() {
   bricks.clear();
 
-  int num_bricks = level == 1 ? 10 : level == 2 ? 20 : 30; // set the number of bricks based on the level
+  int num_bricks = level == 1 ? 3 : level == 2 ? 5 : 30; // set the number of bricks based on the level
   float brick_width = 0.1f;
   float brick_height = 0.05f;
   float brick_gap = 0.01f;
   float bricks_start_x = -0.45f;
   float bricks_start_y = level == 1 ? 0.5f : level == 2 ? 0.8f : 0.9f; // set the y-position of the bricks based on the level
 
-  if (level == 2 || level == 3) {
+if (level == 1){
+  ball.velocity = normalize(vec2(0.5, 1.0)) * 0.7f;
+  paddle.size = vec2(0.3, 0.05);
+}
+  if (level == 2 ) {
     ball.velocity *= 1.5f; // increase the ball speed for levels 2 and 3
-    paddle.size /= 2.0f; // decrease the paddle size for level 2 and 3
+    paddle.size =vec2(0.15, 0.025); // decrease the paddle size for level 2 and 3
   }
   if (level == 3) {
     ball.velocity *= 1.5f; // increase the ball speed for level 3
-    paddle.size *= 2.0f; // increase the paddle size for level 3
+    paddle.size=  vec2(0.08, 0.013); // increase the paddle size for level 3
   }
 
   for (int i = 0; i < num_bricks; i++) {
@@ -130,14 +136,25 @@ void update(float dt) {
       // check for collisions with the paddle and bricks
   bool hit_paddle = checkBallPaddleCollision();
   bool hit_brick = checkBallBrickCollision();
+
+  int liveCount = 0;
+    for(int i = 0; i < bricks.size(); i++){
+      if(bricks[i].is_alive){
+        liveCount++;
+        break;
+      }
+    }
+    if(liveCount == 0){
+      last_brick_hit = true;
+    }
   
   if (hit_paddle || hit_brick) {
     // update the ball's position
     updateBallPosition(dt);
-
-    if (bricks.back().is_alive == false && level == 1) {
+    
+    /**if (bricks.back().is_alive == false && level == 1) {
       last_brick_hit = true;
-    }
+    }*/
   }
 
   // check if the ball went beyond the paddle
@@ -152,7 +169,8 @@ void update(float dt) {
         }
     }
     // check if the game is over
-    if (bricks.size() == 0) {
+    if (last_brick_hit) { //bricks.size() == 0
+        last_brick_hit = false;
         game_over = true;
         level++; // increase the level
         restartGame(); // restart the game with new level
@@ -200,7 +218,7 @@ bool checkBallBrickCollision() {
         bricks[i].is_alive = false;
         
          if (i == bricks.size() - 1) {
-          last_brick_hit = true;
+          //last_brick_hit = true;
         }
 
         vec2 v_norm = normalize(ball.velocity);
