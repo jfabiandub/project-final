@@ -8,6 +8,9 @@
 #include <functional>
 #include <string>
 #include <random>
+#include <chrono>
+#include <thread>
+
 
 
 
@@ -79,6 +82,8 @@ renderer.loadTexture("green", "../textures/green.png", 0);
 renderer.loadTexture("blue2", "../textures/blue2.png", 0);
 renderer.loadTexture("gray", "../textures/gray.png", 0);
 renderer.loadTexture("turquise", "../textures/turquise.png", 0);
+renderer.loadTexture("winner", "../textures/winner.png", 0);
+
 
 
 
@@ -100,7 +105,7 @@ createBricks();
 void createBricks() {
   bricks.clear();
 
-  int num_bricks = level == 1 ? 3 : level == 2 ? 5 : 30; // set the number of bricks based on the level
+  int num_bricks = level == 1 ? 10 : level == 2 ? 20 : 30; // set the number of bricks based on the level
   float brick_width = 0.1f;
   float brick_height = 0.05f;
   float brick_gap = 0.01f;
@@ -117,7 +122,7 @@ if (level == 1){
   }
   if (level == 3) {
     ball.velocity *= 1.5f; // increase the ball speed for level 3
-    paddle.size=  vec2(0.08, 0.013); // increase the paddle size for level 3
+    paddle.size=  vec2(0.08, 0.013);// increase the paddle size for level 3
   }
 
   for (int i = 0; i < num_bricks; i++) {
@@ -147,7 +152,9 @@ void update(float dt) {
     if(liveCount == 0){
       last_brick_hit = true;
     }
-  
+  if (level == 3 && last_brick_hit ) {
+    won = true;
+        }
   if (hit_paddle || hit_brick) {
     // update the ball's position
     updateBallPosition(dt);
@@ -329,7 +336,13 @@ void updatePaddlePosition(float dt) {
   renderer.sphere();
   renderer.pop();
     
-
+  if (won){
+    std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+            
+            renderer.text("Winner",  0.0f,  0.4f );
+            game_over = true;
+        
+  }
   updatePaddlePosition(dt());
     // draw paddle 
 
@@ -341,8 +354,11 @@ void updatePaddlePosition(float dt) {
   renderer.texture("image", shaders[index]);
 
 
+
   renderer.cube();
   renderer.pop();
+
+  
   renderer.endShader();
   
   
@@ -354,10 +370,8 @@ void updatePaddlePosition(float dt) {
       renderer.scale(vec3(bricks[i].size, 0));
       renderer.cube();
       renderer.pop();
-
     }
   }
-  
 
   checkBallBrickCollision();
   checkBallPaddleCollision();
@@ -368,6 +382,7 @@ void updatePaddlePosition(float dt) {
 protected:
   bool allDead = false;
   bool animation_started = false;
+  bool won = false;
 
 
 vec3 eyePos = vec3(0, 0, 3);
