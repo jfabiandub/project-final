@@ -57,6 +57,13 @@ Brick: Stores information about a brick, such as its position, size, and whether
 The game consists of a ball, a paddle, and multiple bricks. The player controls the paddle using the left and right arrow keys. The objective of the game is to bounce the ball off the paddle and destroy all the bricks on the screen.
 
 ## Unique features 
+The game has three levels with increasing difficulty.
+The user has a total of three lives, if the ball goes beyond the paddle less than 3 times, the current level restarts, however, if the ball goes beyong the paddle more than 3 times, the game restarts from level 1.
+Both the paddle and the bricks change color every time the ball hits thr paddle
+The game has a color background 
 
-TODO: Show the unique features you made
+
+<img width="615" alt="Screenshot 2023-05-06 at 2 19 17 AM" src="https://user-images.githubusercontent.com/102636198/236605944-079965c4-ca12-40e4-a409-6a122d59bdd7.png">
+
+<img width="704" alt="Screenshot 2023-05-06 at 2 22 33 AM" src="https://user-images.githubusercontent.com/102636198/236606103-1f46b3e4-a43b-471b-a64e-f2e6aca0713d.png">
 
